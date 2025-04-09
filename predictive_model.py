@@ -9,12 +9,12 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
-df = pd.read_csv("final_crime_dataset.csv")
+df = pd.read_csv("Final_LSTM_Dataset.csv")
 df = df.replace([np.inf, -np.inf], np.nan).dropna()
 
 # Linear Regression 
-X = df[["Estimated Mean Income", "Population"]]
-y = df["Crime Rate per 1K"]
+X = df[["Estimated Mean Income", "Population", "Mean Temp (°C)"]]
+y = df["Crime Rate"]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -47,12 +47,12 @@ print("R² Score:", round(r2_score(y_test, y_pred_rf), 2))
 
 # LSTM Time-Series Forecasting
 df_sorted = df.sort_values(["Year", "Month"])
-monthly_series = df_sorted.groupby(["Year", "Month"])["Crime Rate per 1K"].sum().reset_index()
+monthly_series = df_sorted.groupby(["Year", "Month"])["Crime Rate"].sum().reset_index()
 monthly_series["Date"] = pd.to_datetime(monthly_series[["Year", "Month"]].assign(DAY=1))
 monthly_series.set_index("Date", inplace=True)
 
 scaler = MinMaxScaler()
-scaled_crime = scaler.fit_transform(monthly_series[["Crime Rate per 1K"]])
+scaled_crime = scaler.fit_transform(monthly_series[["Crime Rate"]])
 
 def create_sequences(data, window=12):
     X, y = [], []
