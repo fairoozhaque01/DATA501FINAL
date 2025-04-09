@@ -5,6 +5,8 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
+
 
 df = pd.read_csv("Final_LSTM_Dataset.csv")
 
@@ -73,6 +75,10 @@ print("🔁 LSTM Forecasting Results (Last 12 months):")
 print(f"MAE: {mae:.2f}")
 print(f"MSE: {mse:.2f}")
 print(f"RMSE: {rmse:.2f}")
+r2 = r2_score(y_test, y_pred)
+print(f"R² Score: {r2:.2f}")
+
+
 
 plot_dates = monthly_crime["Date"].iloc[-12:]  # last 12 months
 
@@ -105,6 +111,9 @@ print(f"\n🔁 LSTM Forecasting Results (Unscaled):")
 print(f"MAE: {mae:.2f}")
 print(f"MSE: {mse:.2f}")
 print(f"RMSE: {rmse:.2f}")
+r2 = r2_score(y_test_unscaled, y_pred_unscaled)
+print(f"R² Score: {r2:.2f}")
+
 
 
 
