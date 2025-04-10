@@ -45,39 +45,40 @@ rmse = round(mse**0.5, 2)
 print("RMSE:", rmse)
 print("R² Score:", round(r2_score(y_test, y_pred_rf), 2))
 
-# LSTM Time-Series Forecasting
-df_sorted = df.sort_values(["Year", "Month"])
-monthly_series = df_sorted.groupby(["Year", "Month"])["Crime Rate"].sum().reset_index()
-monthly_series["Date"] = pd.to_datetime(monthly_series[["Year", "Month"]].assign(DAY=1))
-monthly_series.set_index("Date", inplace=True)
+#linear regression plot
+plt.figure(figsize=(10, 5))
+plt.plot(y_test.values, label="Actual", marker="o")
+plt.plot(y_pred_lr, label="Predicted (Linear Regression)", marker="x")
+plt.title("📈 Linear Regression: Actual vs Predicted Crime Rate")
+plt.xlabel("Test Sample Index")
+plt.ylabel("Crime Rate")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
-scaler = MinMaxScaler()
-scaled_crime = scaler.fit_transform(monthly_series[["Crime Rate"]])
+#random forest plot
+plt.figure(figsize=(10, 5))
+plt.plot(y_test.values, label="Actual", marker="o")
+plt.plot(y_pred_rf, label="Predicted (Random Forest)", marker="s")
+plt.title("🌳 Random Forest: Actual vs Predicted Crime Rate")
+plt.xlabel("Test Sample Index")
+plt.ylabel("Crime Rate")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
-def create_sequences(data, window=12):
-    X, y = [], []
-    for i in range(len(data) - window):
-        X.append(data[i:i + window])
-        y.append(data[i + window])
-    return np.array(X), np.array(y)
+#linear vs random forest plot
 
-X_lstm, y_lstm = create_sequences(scaled_crime)
-X_train_lstm, X_test_lstm = X_lstm[:-6], X_lstm[-6:]
-y_train_lstm, y_test_lstm = y_lstm[:-6], y_lstm[-6:]
-
-lstm_model = Sequential()
-lstm_model.add(LSTM(64, activation='relu', input_shape=(X_train_lstm.shape[1], 1)))
-lstm_model.add(Dense(1))
-lstm_model.compile(optimizer='adam', loss='mse')
-lstm_model.fit(X_train_lstm, y_train_lstm, epochs=50, verbose=0)
-
-y_pred_lstm = lstm_model.predict(X_test_lstm)
-y_pred_rescaled = scaler.inverse_transform(y_pred_lstm)
-y_test_rescaled = scaler.inverse_transform(y_test_lstm)
-
-print("\n🔁 LSTM Forecasting Results:")
-print("MAE:", round(mean_absolute_error(y_test_rescaled, y_pred_rescaled), 2))
-print("MSE:", round(mean_squared_error(y_test_rescaled, y_pred_rescaled), 2))
-mse = mean_squared_error(y_test_rescaled, y_pred_rescaled)
-rmse = round(mse**0.5, 2)
-print("RMSE:", rmse)
+plt.figure(figsize=(12, 6))
+plt.plot(y_test.values, label="Actual", marker='o')
+plt.plot(y_pred_lr, label="Predicted (Linear Regression)", marker='x')
+plt.plot(y_pred_rf, label="Predicted (Random Forest)", marker='s')
+plt.title("📈 Actual vs Predicted Crime Rate: Regression Models")
+plt.xlabel("Test Sample Index")
+plt.ylabel("Crime Rate")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()

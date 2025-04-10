@@ -82,15 +82,14 @@ print(f"R² Score: {r2:.2f}")
 
 plot_dates = monthly_crime["Date"].iloc[-12:]  # last 12 months
 
-plt.figure(figsize=(12, 6))
-plt.plot(plot_dates, y_test, label="Actual", marker="o")
-plt.plot(plot_dates, y_pred, label="Predicted", marker="x")
-plt.title("LSTM Prediction vs Actual Crime Count (Last 12 Months)")
-plt.xlabel("Date")
-plt.ylabel("Crime Count (Scaled)")
+plt.figure(figsize=(10, 5))
+plt.plot(y_test, label="Actual (Scaled)", marker="o")
+plt.plot(y_pred, label="Predicted (LSTM)", marker="^")
+plt.title("🔁 LSTM (Scaled): Actual vs Predicted Crime Rate")
+plt.xlabel("Test Sample Index")
+plt.ylabel("Crime Rate (Scaled)")
 plt.legend()
 plt.grid(True)
-plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
@@ -116,14 +115,14 @@ print(f"R² Score: {r2:.2f}")
 
 
 
-
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(10, 5))
 plt.plot(y_test_unscaled, label="Actual Crime Count", marker="o")
-plt.plot(y_pred_unscaled, label="Predicted Crime Count", marker="x")
-plt.title("🔁 LSTM Forecast: Actual vs Predicted Monthly Crime Count")
-plt.xlabel("Test Sample Index (Months)")
+plt.plot(y_pred_unscaled, label="Predicted Crime Count (LSTM)", marker="^")
+plt.title("🔁 LSTM Forecast: Actual vs Predicted Monthly Crime Count (Unscaled)")
+plt.xlabel("Test Sample Index")
 plt.ylabel("Crime Count")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
