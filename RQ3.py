@@ -7,10 +7,9 @@ crime_df = pd.read_csv("calgary_crime_cleaned.csv")
 population_df = pd.read_csv("calgary_population_estimated.csv")
 ward_income = pd.read_csv("Household_Income.csv", thousands=",")
 community_ward_map = pd.read_csv("Communities_by_Ward_20250404.csv")  
-
-
 crime_df["Community"] = crime_df["Community"].str.lower().str.strip()
 community_ward_map["Community"] = community_ward_map["NAME"].str.lower().str.strip()
+newdf = pd.read_csv("final_crime_dataset.csv")
 
 community_ward_map.rename(columns={"WARD_NUM": "Ward"}, inplace=True)
 print(community_ward_map.head())
@@ -37,19 +36,21 @@ crime_by_ward["Crime Rate"] = crime_by_ward["Crime Count"] / crime_by_ward["Popu
 print(crime_by_ward.head())
 
 
-print("\n📊 Correlation: Population vs Total Crime Count")
-print(crime_by_ward[["Crime Rate", "Population"]].corr())
 
-sns.scatterplot(data=crime_by_ward, x="Population", y="Crime Count")
+
+print("\n📊 Correlation: Population vs Total Crime Count")
+print(newdf[["Crime Rate per 1K", "Population"]].corr())
+
+sns.scatterplot(data=newdf, x="Population", y="Crime Count")
 plt.title("Total Crime vs Population by Ward")
 plt.xlabel("Population")
 plt.ylabel("Crime Count")
 plt.grid(True)
 plt.show()
-sns.lmplot(data=crime_by_ward, x="Population", y="Crime Rate", height=5, aspect=1.5)
-plt.title("Crime Rate vs Population (with regression line)")
+sns.lmplot(data=newdf, x="Population", y="Crime Rate per 1K", height=5, aspect=1.5)
+plt.title("Crime Rate per 1K vs Population (with regression line)")
 plt.xlabel("Population")
-plt.ylabel("Crime Rate per 1,000 residents")
+plt.ylabel("Crime Rate per 1K")
 plt.grid(True)
 plt.show()
 
@@ -93,6 +94,8 @@ print(ward_income_final.head())
 
 crime_by_ward["Ward"] = crime_by_ward["Ward"].astype(int)
 crime_by_ward = pd.merge(crime_by_ward, ward_income_final, on="Ward", how="left")
+
+crime_by_ward.to_csv("final_crime_dataset_wo_weather.csv", index=False)
 
 
 print("\n📊 Correlation Matrix:")
