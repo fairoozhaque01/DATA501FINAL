@@ -5,8 +5,9 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 
 # Load & Preprocess Data
-df = pd.read_csv("final_crime_dataset.csv")
+df = pd.read_csv("Final_LSTM_Dataset.csv")
 df2 = pd.read_csv("calgary_crime_cleaned.csv")
+df3 = pd.read_csv("final_crime_dataset2.csv")
 df.dropna(inplace=True)
 df["Date"] = pd.to_datetime(df[["Year", "Month"]].assign(DAY=1))
 
@@ -77,13 +78,13 @@ def render_tab_content(tab):
 )
 def update_rq3_scatter(selected_var):
 
-    corr = df["Crime Rate per 1K"].corr(df[selected_var])
+    corr = df3["Crime Rate"].corr(df3[selected_var])
     corr_text = f"🔍 Correlation between {selected_var} and Crime Rate: **{corr:.2f}**"
 
     fig = px.scatter(
-        df,
+        df3,
         x=selected_var,
-        y="Crime Rate per 1K",
+        y="Crime Rate",
         trendline="ols",
         title=f"Crime Rate vs {selected_var} (Ward-Level Averages)",
         labels={"Crime Rate per 1K": "Crime Rate per 1K", selected_var: selected_var},
@@ -95,7 +96,7 @@ def update_rq3_scatter(selected_var):
         yaxis=dict(showgrid=True, gridcolor="#eee"),
     )
     return fig, corr_text
-print(df[["Crime Rate per 1K", "Population"]].corr())
+print(df3[["Crime Rate", "Population"]].corr())
 
 
 # Run the App
