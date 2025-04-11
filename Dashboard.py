@@ -3,6 +3,10 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
 
 # Load & Preprocess Data
 df = pd.read_csv("Final_LSTM_Dataset.csv")
@@ -10,6 +14,24 @@ df2 = pd.read_csv("calgary_crime_cleaned.csv")
 df3 = pd.read_csv("final_crime_dataset2.csv")
 df.dropna(inplace=True)
 df["Date"] = pd.to_datetime(df[["Year", "Month"]].assign(DAY=1))
+
+# Prepare data for Random Forest
+X = df[["Estimated Mean Income", "Population", "Mean Temp (°C)"]]
+y = df["Crime Rate"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = RandomForestRegressor(random_state=42)
+model.fit(X_train, y_train)
+X_test_rf = df.loc[y_test.index, ["Estimated Mean Income", "Population", "Mean Temp (°C)"]]
+X_test_rf.columns = X_test_rf.columns.astype(str)  # ✅ Make sure all column names are strings
+y_pred = model.predict(X_test_rf)
+
+mae = round(mean_absolute_error(y_test, y_pred), 2)
+mse = round(mean_squared_error(y_test, y_pred), 2)
+rmse = round(mse ** 0.5, 2)
+r2 = round(r2_score(y_test, y_pred), 2)
+
+
 
 
 app = dash.Dash(__name__)
@@ -65,10 +87,15 @@ def render_tab_content(tab):
     # not completed
     elif tab == "rq4":
         return html.Div([
-            html.H3("Forecasting Future Crime (LSTM Model Results)"),
-            html.P("MAE: 124.98 | RMSE: 166.38 | R²: 0.00"),
-            dcc.Graph(figure=px.line(df.tail(12), x="Date", y="Crime Count", title="Actual vs Predicted Crime (example)")),
-            html.P("Model includes weather, income, population, etc.")
+            html.H3("Forecasting Future Crime using Random Forest"),
+            html.P(f"MAE: {mae} | RMSE: {rmse} | R²: {r2}"),
+            dcc.Graph(figure=px.line(
+                x=list(range(len(y_test))),
+                y=[y_test.values, y_pred],
+                labels={"x": "Test Sample Index", "value": "Crime Rate"},
+                title="Random Forest: Actual vs Predicted Crime Rate"
+            ).update_traces(marker=dict(size=6)).update_layout(legend=dict(title=None, itemsizing='constant'))),
+            html.P("Model includes income, population, and weather data.")
         ])
 
 @app.callback(
