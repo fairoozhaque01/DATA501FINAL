@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import dash
 from dash import dcc, html
@@ -86,17 +87,22 @@ def render_tab_content(tab):
         ])
     # not completed
     elif tab == "rq4":
+        
         return html.Div([
             html.H3("Forecasting Future Crime using Random Forest"),
-            html.P(f"MAE: {mae} | RMSE: {rmse} | R²: {r2}"),
-            dcc.Graph(figure=px.line(
-                x=list(range(len(y_test))),
-                y=[y_test.values, y_pred],
-                labels={"x": "Test Sample Index", "value": "Crime Rate"},
-                title="Random Forest: Actual vs Predicted Crime Rate"
-            ).update_traces(marker=dict(size=6)).update_layout(legend=dict(title=None, itemsizing='constant'))),
-            html.P("Model includes income, population, and weather data.")
-        ])
+            html.Label("Select Model:", style={"fontWeight": "bold"}),
+            dcc.Dropdown(
+            id="model-dropdown",
+            options=[
+                {"label": "Linear Regression", "value": "lr"},
+                {"label": "Random Forest", "value": "rf"},
+            ],
+            value="rf",
+            style={"width": "300px", "marginBottom": "20px"}
+        ),
+        html.Div(id="model-output"),
+        dcc.Graph(id="model-prediction-graph")
+    ])
 
 @app.callback(
     [Output("rq3-scatter-plot", "figure"),
@@ -123,7 +129,61 @@ def update_rq3_scatter(selected_var):
         yaxis=dict(showgrid=True, gridcolor="#eee"),
     )
     return fig, corr_text
-print(df3[["Crime Rate", "Population"]].corr())
+
+@app.callback(
+    [Output("model-output", "children"),
+     Output("model-prediction-graph", "figure")],
+    Input("model-dropdown", "value")
+)
+def update_model_results(selected_model):
+    from sklearn.model_selection import train_test_split
+    from sklearn.linear_model import LinearRegression
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    import plotly.graph_objs as go
+
+    features = ["Estimated Mean Income", "Population", "Mean Temp (°C)"]
+    target = "Crime Rate"
+    df_model = df.copy()
+    df_model.dropna(subset=features + [target], inplace=True)
+    
+    X = df_model[features]
+    y = df_model[target]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    if selected_model == "lr":
+        model = LinearRegression()
+        model_name = "Linear Regression"
+    else:
+        model = RandomForestRegressor(random_state=42)
+        model_name = "Random Forest"
+
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, y_pred)
+
+    # Results Text
+    result_text = html.Div([
+        html.P(f"Model: {model_name}"),
+        html.P(f"MAE: {mae:.2f}"),
+        html.P(f"MSE: {mse:.2f}"),
+        html.P(f"RMSE: {rmse:.2f}"),
+        html.P(f"R² Score: {r2:.2f}")
+    ])
+
+    # Plot
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(y=y_test.values, mode='lines+markers', name='Actual'))
+    fig.add_trace(go.Scatter(y=y_pred, mode='lines+markers', name='Predicted'))
+    fig.update_layout(title=f"{model_name}: Actual vs Predicted Crime Rate",
+                      xaxis_title="Test Sample Index", yaxis_title="Crime Rate", height=500)
+
+    return result_text, fig
 
 
 # Run the App
